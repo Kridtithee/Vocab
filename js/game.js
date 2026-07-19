@@ -165,15 +165,24 @@ function renderBoard() {
   });
 
   // Shuffle and render
-  shuffle(cards).forEach((card) => {
+  // ของใหม่ — แสดง type ด้วย
+shuffle(cards).forEach((card) => {
     const el = document.createElement('div');
     el.className = `card ${card.type}`;
     el.dataset.pairId = card.id;
     el.dataset.type = card.type;
-    el.textContent = card.text;
+    
+    // หา type label จาก data
+    const vocab = state.levelPairs[card.id];
+    const typeLabel = vocab ? vocab.type : '';
+    
+    el.innerHTML = `
+      <span class="card-text">${card.text}</span>
+      <span class="card-type">${typeLabel}</span>
+    `;
+    
     el.addEventListener('click', () => handleCardClick(el, card));
-    dom.cardGrid.appendChild(el);
-  });
+    dom.cardGrid.appendChild(el);ด้วย
 }
 
 // ─── Handle Card Click ───────────────────
