@@ -1,14 +1,125 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VocabMatch — Minimal Matching Game</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocabMatch — Minimal Matching Game</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface-hover: #1a1a24;
+  --border: #252530;
+  --text: #e8e8ed;
+  --text-muted: #6b6b7b;
+  --accent: #6c5ce7;
+  --accent-light: #a29bfe;
+  --success: #00cec9;
+  --danger: #ff7675;
+  --gold: #fdcb6e;
+  --card-en-bg: #1a1a2e;
+  --card-en-text: #74b9ff;
+  --card-th-bg: #2d1b2e;
+  --card-th-text: #fd79a8;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-hover: 0 8px 24px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 20px rgba(108,92,231,0.15);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.app { width: 100%; max-width: 640px; padding: 16px; display: flex; flex-direction: column; gap: 20px; min-height: 100vh; }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+.logo { display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.logo-icon { color: var(--accent); font-size: 1.1rem; }
+.stats { display: flex; gap: 16px; }
+.stat { display: flex; align-items: center; gap: 6px; background: var(--surface); padding: 6px 12px; border-radius: var(--radius-xl); border: 1px solid var(--border); font-size: 0.85rem; }
+.stat-icon { font-size: 0.9rem; }
+.stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+.progress-section { display: flex; align-items: center; gap: 12px; }
+.level-badge { background: var(--accent); color: white; padding: 6px 14px; border-radius: var(--radius-xl); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
+.progress-track { flex: 1; height: 6px; background: var(--surface); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); width: 0%; }
+.match-count { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; font-variant-numeric: tabular-nums; min-width: 28px; text-align: right; }
+.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.card {
+  aspect-ratio: 1; border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 12px 8px; cursor: pointer; user-select: none; font-weight: 600; font-size: 0.78rem;
+  line-height: 1.35; word-break: break-word; transition: all var(--transition); position: relative; gap: 6px;
+  border: 2px solid transparent; animation: cardIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+.card:nth-child(1){animation-delay:.02s}.card:nth-child(2){animation-delay:.04s}.card:nth-child(3){animation-delay:.06s}
+.card:nth-child(4){animation-delay:.08s}.card:nth-child(5){animation-delay:.10s}.card:nth-child(6){animation-delay:.12s}
+.card:nth-child(7){animation-delay:.14s}.card:nth-child(8){animation-delay:.16s}.card:nth-child(9){animation-delay:.18s}
+.card:nth-child(10){animation-delay:.20s}.card:nth-child(11){animation-delay:.22s}.card:nth-child(12){animation-delay:.24s}
+@keyframes cardIn { from { opacity: 0; transform: scale(0.85) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.card.en { background: var(--card-en-bg); color: var(--card-en-text); border-color: rgba(116, 185, 255, 0.15); }
+.card.th { background: var(--card-th-bg); color: var(--card-th-text); border-color: rgba(253, 121, 168, 0.15); }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.card:active { transform: scale(0.97); }
+.card.selected { border-color: var(--accent-light) !important; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25); transform: scale(1.03); z-index: 2; }
+.card.matched { animation: matchPop 0.45s cubic-bezier(0.4, 0, 0.6, 1) forwards; pointer-events: none; }
+@keyframes matchPop { 0% { transform: scale(1); opacity: 1; } 40% { transform: scale(1.12); opacity: 0.9; } 100% { transform: scale(0); opacity: 0; } }
+.card.wrong { animation: shake 0.4s; border-color: var(--danger) !important; background: rgba(255, 118, 117, 0.15) !important; }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.card.hidden { visibility: hidden; pointer-events: none; }
+.message { text-align: center; font-size: 0.9rem; color: var(--text-muted); min-height: 24px; transition: all 0.3s; }
+.message.correct { color: var(--success); }
+.message.wrong { color: var(--danger); }
+.overlay {
+  position: fixed; inset: 0; background: rgba(10, 10, 15, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; z-index: 100;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+.win-dialog {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 40px 36px;
+  text-align: center; max-width: 360px; width: 90%; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4); animation: dialogIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes dialogIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.win-emoji { font-size: 3rem; margin-bottom: 8px; }
+.win-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+.win-level { color: var(--accent-light); font-size: 0.9rem; margin-bottom: 16px; }
+.win-stat-row { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+.win-stat-row strong { color: var(--text); }
+.btn-next { display: inline-block; padding: 12px 32px; background: var(--accent); color: white; border: none; border-radius: var(--radius-xl); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all var(--transition); }
+.btn-next:hover { background: #7c6ff7; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(108, 92, 231, 0.3); }
+.btn-next:active { transform: scale(0.96); }
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface);
+  border: 1px solid var(--border); padding: 10px 24px; border-radius: var(--radius-xl); font-size: 0.85rem; font-weight: 500;
+  opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--success); color: var(--success); }
+.toast.error { border-color: var(--danger); color: var(--danger); }
+.confetti { position: fixed; width: 8px; height: 8px; border-radius: 2px; pointer-events: none; z-index: 200; animation: confettiFall linear forwards; }
+@keyframes confettiFall { 0% { transform: translateY(-10px) rotate(0deg) scale(1); opacity: 1; } 80% { opacity: 0.8; } 100% { transform: translateY(105vh) rotate(720deg) scale(0.3); opacity: 0; } }
+@media (max-width: 480px) { .app { padding: 12px; gap: 16px; } .card-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } .card { font-size: 0.72rem; padding: 8px 6px; } .logo { font-size: 1.1rem; } }
+@media (min-width: 640px) { .card-grid { grid-template-columns: repeat(4, 1fr); } }
+.card-type {
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--bg); background: var(--gold); padding: 2px 8px; border-radius: 99px; line-height: 1.6;
+}
+.card-text { word-break: break-word; }
+</style>
 </head>
 <body>
   <div class="app">
-    <!-- Header -->
     <header class="header">
       <div class="logo">
         <span class="logo-icon">◆</span>
@@ -26,9 +137,7 @@
       </div>
     </header>
 
-    <!-- Game Area -->
     <main class="main">
-      <!-- Progress -->
       <div class="progress-section">
         <div class="level-badge" id="level-badge">Level 1</div>
         <div class="progress-track">
@@ -37,14 +146,11 @@
         <div class="match-count" id="match-count">0/6</div>
       </div>
 
-      <!-- Card Grid -->
       <div class="card-grid" id="card-grid"></div>
 
-      <!-- Message -->
       <div class="message" id="message"></div>
     </main>
 
-    <!-- Win Overlay -->
     <div class="overlay" id="overlay">
       <div class="win-dialog">
         <div class="win-emoji">🎉</div>
@@ -57,11 +163,360 @@
       </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
   </div>
 
-  <script src="js/vocab-data.js"></script>
-  <script src="js/game.js"></script>
+<script>
+const VOCAB_BANK = [
+  { en: "Adjust", th: "plans", type: "v" },
+  { en: "Enable", th: "coach", type: "v" },
+  { en: "Maintain", th: "diet", type: "v" },
+  { en: "Affect", th: "change", type: "v" },
+  { en: "Restore", th: "return", type: "v" },
+  { en: "Suffer", th: "experience", type: "v" },
+  { en: "Ensure", th: "plenty", type: "v" },
+  { en: "Cope", th: "responsibility", type: "v" },
+  { en: "Commit", th: "attending", type: "v" },
+  { en: "Assume", th: "cookies", type: "v" },
+  { en: "Respond", th: "feedback", type: "v" },
+  { en: "Abandon", th: "leave", type: "v" },
+  { en: "Betray", th: "trusts you", type: "v" },
+  { en: "Collapse", th: "break down", type: "v" },
+  { en: "Encounter", th: "meeting", type: "v" },
+  { en: "Occur", th: "happen", type: "v" },
+  { en: "Classify", th: "scientists", type: "v" },
+  { en: "Sail", th: "sunrise", type: "v" },
+  { en: "Seek", th: "look for", type: "v" },
+  { en: "Drown", th: "underwater", type: "v" },
+  { en: "Determine", th: "decide", type: "v" },
+  { en: "Confirm", th: "true", type: "v" },
+  { en: "Capture", th: "control", type: "v" },
+  { en: "Balance", th: "build", type: "n" },
+  { en: "Current", th: "focus", type: "n" },
+  { en: "Anxiety", th: "nervousness", type: "n" },
+  { en: "Treatment", th: "medicines", type: "n" },
+  { en: "Faith", th: "confidence", type: "n" },
+  { en: "Infection", th: "skin", type: "n" },
+  { en: "Factor", th: "routine", type: "n" },
+  { en: "Needle", th: "Doctor", type: "n" },
+  { en: "Strength", th: "deadline", type: "n" },
+  { en: "Institution", th: "college", type: "n" },
+  { en: "Capable", th: "very", type: "n" },
+  { en: "Behalf", th: "staff", type: "n" },
+  { en: "Association", th: "member", type: "n" },
+  { en: "Award", th: "winning", type: "n" },
+  { en: "Weakness", th: "small detail", type: "n" },
+  { en: "Intention", th: "separate", type: "n" },
+  { en: "Circumstance", th: "finish", type: "n" },
+  { en: "Selection", th: "high number", type: "n" },
+  { en: "Relief", th: "project", type: "n" },
+  { en: "Combination", th: "together two", type: "n" },
+  { en: "Reputation", th: "opinion", type: "n" },
+  { en: "Perspective", th: "a way", type: "n" },
+  { en: "Pirate", th: "captain", type: "n" },
+  { en: "Feature", th: "amazing", type: "n" },
+  { en: "Shipwreck", th: "lost", type: "n" },
+  { en: "Destination", th: "traveling", type: "n" },
+  { en: "Voyage", th: "long", type: "n" },
+  { en: "Port", th: "ships", type: "n" },
+  { en: "Crucial", th: "most", type: "adj" },
+  { en: "Conventional", th: "accepted", type: "adj" },
+  { en: "Gradual", th: "moving", type: "adj" },
+  { en: "Practical", th: "reasonable", type: "adj" },
+  { en: "Medical", th: "team", type: "adj" },
+  { en: "Potential", th: "diseases", type: "adj" },
+  { en: "Massive", th: "biggest", type: "adj" },
+  { en: "Competitive", th: "extremely", type: "adj" },
+  { en: "Tough", th: "homework", type: "adj" },
+  { en: "Sufficient", th: "candle", type: "adj" },
+  { en: "Deliberate", th: "two hour", type: "adj" },
+  { en: "Outstanding", th: "academic", type: "adj" },
+  { en: "Overall", th: "improve", type: "adj" },
+  { en: "Ideal", th: "relaxing", type: "adj" },
+  { en: "Suspicious", th: "not trusting", type: "adj" },
+  { en: "Proud", th: "well", type: "adj" },
+  { en: "Extensive", th: "complete", type: "adj" },
+  { en: "Instant", th: "very short", type: "adj" },
+  { en: "Attractive", th: "interesting", type: "adj" },
+  { en: "Stunning", th: "beautiful", type: "adj" },
+  { en: "Remarkable", th: "coincidence", type: "adj" },
+  { en: "Dreadful", th: "didn't like", type: "adj" },
+  { en: "Exotic", th: "tried", type: "adj" },
+  { en: "Astonishing", th: "absolutely", type: "adj" },
+  { en: "Priceless", th: "decades", type: "adj" },
+  { en: "Unsophisticated", th: "simple", type: "adj" },
+  { en: "Tremendous", th: "large", type: "adj" },
+  { en: "Insignificant", th: "unimportant", type: "adj" },
+  { en: "Initially", th: "my new", type: "adv" },
+  { en: "Quite", th: "a lot", type: "adv" },
+  { en: "Truly", th: "performance", type: "adv" },
+];
+
+const state = {
+  level: 1,
+  pairsPerLevel: 6,
+  matched: 0,
+  mistakes: 0,
+  streak: 0,
+  selected: null,
+  locked: false,
+  levelPairs: [],
+  pool: [],
+};
+
+const dom = {
+  cardGrid: document.getElementById('card-grid'),
+  levelBadge: document.getElementById('level-badge'),
+  progressFill: document.getElementById('progress-fill'),
+  matchCount: document.getElementById('match-count'),
+  streakEl: document.getElementById('streak'),
+  mistakesEl: document.getElementById('mistakes'),
+  message: document.getElementById('message'),
+  overlay: document.getElementById('overlay'),
+  winLevel: document.getElementById('win-level'),
+  winMistakes: document.getElementById('win-mistakes'),
+  btnNext: document.getElementById('btn-next'),
+  toast: document.getElementById('toast'),
+};
+
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function showMessage(text, type = '') {
+  dom.message.textContent = text;
+  dom.message.className = 'message ' + type;
+  clearTimeout(dom.message._timeout);
+  if (type) {
+    dom.message._timeout = setTimeout(() => {
+      dom.message.textContent = '';
+      dom.message.className = 'message';
+    }, 2000);
+  }
+}
+
+let toastTimer;
+function showToast(text, type = '') {
+  clearTimeout(toastTimer);
+  dom.toast.textContent = text;
+  dom.toast.className = 'toast show ' + type;
+  toastTimer = setTimeout(() => {
+    dom.toast.className = 'toast';
+  }, 1800);
+}
+
+function playSound(freq, type = 'sine', duration = 0.1, volume = 0.04) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) {}
+}
+
+function soundClick() { playSound(800, 'sine', 0.08, 0.03); }
+function soundMatch() { playSound(660, 'sine', 0.15, 0.06); }
+function soundWrong() { playSound(180, 'square', 0.25, 0.05); }
+
+function spawnConfetti() {
+  const colors = ['#6c5ce7', '#a29bfe', '#74b9ff', '#fd79a8', '#fdcb6e', '#00cec9'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    el.style.animationDelay = Math.random() * 0.6 + 's';
+    el.style.width = (5 + Math.random() * 8) + 'px';
+    el.style.height = (5 + Math.random() * 8) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+}
+
+function updateHUD() {
+  dom.streakEl.textContent = state.streak;
+  dom.mistakesEl.textContent = state.mistakes;
+}
+
+function updateProgress() {
+  const pct = (state.matched / state.pairsPerLevel) * 100;
+  dom.progressFill.style.width = pct + '%';
+  dom.matchCount.textContent = `${state.matched}/${state.pairsPerLevel}`;
+}
+
+function initGame() {
+  state.pool = shuffle([...VOCAB_BANK]);
+  state.level = 1;
+  state.mistakes = 0;
+  state.streak = 0;
+  updateHUD();
+  startLevel();
+}
+
+function startLevel() {
+  state.matched = 0;
+  state.selected = null;
+  state.locked = false;
+
+  if (state.pool.length < state.pairsPerLevel) {
+    state.pool = shuffle([...VOCAB_BANK]);
+  }
+
+  state.levelPairs = state.pool.splice(0, state.pairsPerLevel);
+
+  dom.levelBadge.textContent = `Level ${state.level}`;
+  updateProgress();
+  updateHUD();
+  showMessage('', '');
+  renderBoard();
+}
+
+function renderBoard() {
+  dom.cardGrid.innerHTML = '';
+
+  const cards = [];
+  state.levelPairs.forEach((pair, index) => {
+    cards.push({ id: index, type: 'en', text: pair.en });
+    cards.push({ id: index, type: 'th', text: pair.th });
+  });
+
+  shuffle(cards).forEach((card) => {
+    const el = document.createElement('div');
+    el.className = `card ${card.type}`;
+    el.dataset.pairId = card.id;
+    el.dataset.type = card.type;
+
+    const vocab = state.levelPairs[card.id];
+    const typeLabel = vocab ? vocab.type : '';
+
+    el.innerHTML = `
+      <span class="card-text">${card.text}</span>
+      <span class="card-type">${typeLabel}</span>
+    `;
+
+    el.addEventListener('click', () => handleCardClick(el, card));
+    dom.cardGrid.appendChild(el);
+  });
+}
+
+function handleCardClick(el, card) {
+  if (state.locked) return;
+  if (el.classList.contains('hidden')) return;
+  if (el.classList.contains('matched')) return;
+
+  if (state.selected && state.selected.el === el) {
+    el.classList.remove('selected');
+    state.selected = null;
+    soundClick();
+    return;
+  }
+
+  soundClick();
+  el.classList.add('selected');
+
+  if (!state.selected) {
+    state.selected = { el, card };
+    return;
+  }
+
+  const first = state.selected;
+
+  if (first.card.type === card.type) {
+    first.el.classList.remove('selected');
+    state.selected = { el, card };
+    return;
+  }
+
+  checkMatch(first, { el, card });
+}
+
+function checkMatch(first, second) {
+  state.locked = true;
+
+  if (first.card.id === second.card.id) {
+    state.matched++;
+    state.streak++;
+    updateHUD();
+    updateProgress();
+    soundMatch();
+
+    first.el.classList.remove('selected');
+    second.el.classList.remove('selected');
+    first.el.classList.add('matched');
+    second.el.classList.add('matched');
+
+    setTimeout(() => {
+      first.el.classList.add('hidden');
+      second.el.classList.add('hidden');
+    }, 400);
+
+    const streakMsg = state.streak > 1 ? ` 🔥 Streak ×${state.streak}` : '';
+    showMessage(`✅ Matched!${streakMsg}`, 'correct');
+    showToast(`Matched!${streakMsg}`, 'success');
+
+    state.selected = null;
+    state.locked = false;
+
+    if (state.matched === state.pairsPerLevel) {
+      setTimeout(showWin, 500);
+    }
+  } else {
+    state.mistakes++;
+    state.streak = 0;
+    updateHUD();
+    soundWrong();
+
+    first.el.classList.add('wrong');
+    second.el.classList.add('wrong');
+    showMessage('❌ Try again!', 'wrong');
+    showToast('Try again!', 'error');
+
+    setTimeout(() => {
+      first.el.classList.remove('selected', 'wrong');
+      second.el.classList.remove('selected', 'wrong');
+      state.selected = null;
+      state.locked = false;
+    }, 500);
+  }
+}
+
+function showWin() {
+  dom.winLevel.textContent = `Level ${state.level} Complete!`;
+  dom.winMistakes.textContent = state.mistakes;
+  dom.overlay.classList.add('show');
+  spawnConfetti();
+}
+
+function nextLevel() {
+  dom.overlay.classList.remove('show');
+  state.level++;
+  startLevel();
+}
+
+function bindEvents() {
+  dom.btnNext.addEventListener('click', nextLevel);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && dom.overlay.classList.contains('show')) {
+      nextLevel();
+    }
+  });
+}
+
+bindEvents();
+initGame();
+</script>
 </body>
 </html>
