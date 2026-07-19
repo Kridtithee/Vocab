@@ -153,7 +153,6 @@ function startLevel() {
   renderBoard();
 }
 
-// ─── Render Board ────────────────────────
 function renderBoard() {
   dom.cardGrid.innerHTML = '';
 
@@ -164,25 +163,25 @@ function renderBoard() {
     cards.push({ id: index, type: 'th', text: pair.th });
   });
 
-  // Shuffle and render
-  // ของใหม่ — แสดง type ด้วย
-shuffle(cards).forEach((card) => {
+  // Shuffle and render with type
+  shuffle(cards).forEach((card) => {
     const el = document.createElement('div');
     el.className = `card ${card.type}`;
     el.dataset.pairId = card.id;
     el.dataset.type = card.type;
-    
-    // หา type label จาก data
+
+    // Get type label from pair data
     const vocab = state.levelPairs[card.id];
     const typeLabel = vocab ? vocab.type : '';
-    
+
     el.innerHTML = `
       <span class="card-text">${card.text}</span>
       <span class="card-type">${typeLabel}</span>
     `;
-    
+
     el.addEventListener('click', () => handleCardClick(el, card));
-    dom.cardGrid.appendChild(el);ด้วย
+    dom.cardGrid.appendChild(el);
+  });
 }
 
 // ─── Handle Card Click ───────────────────
