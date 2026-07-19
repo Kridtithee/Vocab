@@ -458,3 +458,19 @@ body {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* Type label on cards */
+.card-type {
+  font-size: 0.55rem;
+  opacity: 0.5;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.card.en .card-type { color: rgba(116, 185, 255, 0.5); }
+.card.th .card-type { color: rgba(253, 121, 168, 0.5); }
+
+.card-text {
+  word-break: break-word;
+}
